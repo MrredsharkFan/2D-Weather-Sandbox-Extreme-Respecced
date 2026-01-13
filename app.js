@@ -383,6 +383,7 @@ const guiControls_default = {
   month : 6.65, // Northern hemisphere summer solstice
   sunAngle : 9.9,
   dayNightCycle : true,
+  accelerateNight : true,
   greenhouseGases : 0.001,
   waterGreenHouseEffect : 0.0015,
   IR_rate : 1.0,
@@ -3579,6 +3580,8 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
     radiation_folder.add(guiControls, 'dayNightCycle').name('Day/Night Cycle').listen();
 
+    radiation_folder.add(guiControls, 'accelerateNight').name('Accelerate Night').listen();
+
     radiation_folder.add(guiControls, 'latitude', -90.0, 90.0, 0.1).onChange(function() { updateSunlight(); }).name('Latitude').listen();
 
     radiation_folder.add(guiControls, 'month', 1.0, 12.99, 0.01).onChange(onUpdateMonthSlider).name('Month').listen();
@@ -3607,11 +3610,12 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
       })
       .name('Water Vapor Greenhouse Effect');
 
-    radiation_folder.add(guiControls, 'IR_rate', 0.0, 10.0, 0.1)
-      .onChange(function() {
+    radiation_folder
+      .add(guiControls, 'IR_rate', 0.0, 10.0, 0.1)
+      /*.onChange(function() {
         gl.useProgram(lightingProgram);
         gl.uniform1f(gl.getUniformLocation(lightingProgram, 'IR_rate'), guiControls.IR_rate);
-      })
+      })*/
       .name('IR Multiplier');
 
     var water_folder = datGui.addFolder('Water');
@@ -5812,13 +5816,19 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
 
 
       if (!guiControls.paused) { // Simulation part
+
+        let nightAccelerationActive = !airplaneMode && guiControls.dayNightCycle && guiControls.accelerateNight && guiControls.sunAngle < 0.;
+
         if (guiControls.dayNightCycle) {
           if (airplaneMode) {
-            updateSunlight(1.0 / 3600.0 / 60);                           // increase solar time at real speed: 1/60 seconds per frame
+            updateSunlight(1.0 / 3600.0 / 60);                                                                    // increase solar time at real speed: 1/60 seconds per frame
           } else {
-            updateSunlight(timePerIteration * guiControls.IterPerFrame); // increase solar time
+            updateSunlight(timePerIteration * guiControls.IterPerFrame * (nightAccelerationActive ? 10.0 : 1.0)); // increase solar time
           }
         }
+
+        gl.useProgram(lightingProgram);
+        gl.uniform1f(gl.getUniformLocation(lightingProgram, 'IR_rate'), guiControls.IR_rate * (nightAccelerationActive ? 10.0 : 1.0));
 
         gl.viewport(0, 0, sim_res_x, sim_res_y);
         gl.clearColor(0.0, 0.0, 0.0, 0.0);
