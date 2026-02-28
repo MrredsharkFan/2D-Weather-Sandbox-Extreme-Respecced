@@ -9,6 +9,10 @@ details. You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
+function last(X,Y) {
+  return X[Math.max(X.length-Y,0)]
+}
+
 function updateSetupSliders()
 {
   let simResX = parseInt(simResSelX.value);
@@ -398,7 +402,7 @@ const guiControls_default = {
   IterPerFrame : 10,
   auto_IterPerFrame : true,
   sound : true,
-  dryLapseRate : 10.0,     // Real: 9.8 degrees / km
+  dryLapseRate : 9.8,     // Real: 9.8 degrees / km
   simHeight : 12000,       // meters
   twelveHourClock : false, // only for display.  false = metric
   lengthUnit : 'LENGTH_UNIT_METRIC',
@@ -1085,6 +1089,7 @@ class Weatherstation
     gl.readBuffer(gl.COLOR_ATTACHMENT0); // basetexture
     var baseTextureValues = new Float32Array(4 * 3);
     gl.readPixels(this.#x, this.#y - 1, 1, 3, gl.RGBA, gl.FLOAT, baseTextureValues);
+    console.log(baseTextureValues)
 
     let T = potentialToRealT(baseTextureValues[1 * 4 + 3], this.#y); // temperature in kelvin
 
@@ -1224,7 +1229,8 @@ class Weatherstation
 
       if (this.#soilMoisture > 0.) {
         c.fillText(printSoilMoisture(this.#soilMoisture), 0, 52);
-        c.fillText('💧', 20, 65);
+        c.fillText(printSoilMoisture((last(this.#historyChart.data.datasets[4].data, 1) - last(this.#historyChart.data.datasets[4].data, 5))*15)+"/h",0,65)
+        c.fillText('💧', 0, 78);
       } else if (this.#waterTemperature > -1.0) {
         c.fillStyle = '#406cff';
         c.fillText(printTemp(this.#waterTemperature), 0, 52);
@@ -1233,8 +1239,9 @@ class Weatherstation
 
       if (this.#snowHeight > 0.) {
         c.fillText(printSnowHeight(this.#snowHeight), 67, 52);
+        c.fillText(printSnowHeight((last(this.#historyChart.data.datasets[5].data, 1) - last(this.#historyChart.data.datasets[5].data, 5)) * 15)+"/h", 67, 65)
         c.font = '14px Arial';
-        c.fillText('❄', 85, 65);
+        c.fillText('❄', 85, 78);
       }
     }
 
@@ -1611,7 +1618,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
         this.tarXpos = clamp(this.tarXpos, -0.99, 0.99);
     }
 
-    changeViewYpos(change) { this.tarYpos = clamp(this.tarYpos + change, -2.50, 0.50); }
+    changeViewYpos(change) { this.tarYpos = clamp(this.tarYpos + change, -4.00, 1.0); }
 
     zoomAtMousePos(delta)
     {
@@ -3571,7 +3578,7 @@ async function mainScript(initialBaseTex, initialWaterTex, initialWallTex, initi
       .listen();
     UI_folder.add(guiControls, 'brushSize', 1, 200, 1).name('Brush Diameter').listen();
     UI_folder.add(guiControls, 'wholeWidth').name('Whole Width Brush').listen();
-    UI_folder.add(guiControls, 'brushIntensity', 0.005, 0.05, 0.001).name('Brush Intensity');
+    UI_folder.add(guiControls, 'brushIntensity', 0.005, 0.5, 0.001).name('Brush Intensity');
     UI_folder.add(guiControls, 'allowCaves')
       .onChange(function() {
         gl.useProgram(boundaryProgram);

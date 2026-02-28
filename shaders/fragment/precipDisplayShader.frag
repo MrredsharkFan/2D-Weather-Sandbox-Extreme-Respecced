@@ -38,8 +38,13 @@ void main()
     } else {                                          // mix of ice and water
       fragmentColor = vec4(0.5, 1.0, 1.0, opacity);   // light blue
     }
-  } else {                                            // rain
-    fragmentColor = vec4(0.0, 0.5, 1.0, opacity);     // dark blue
+  } else {               
+    if (opacity > 1.0){                          //rain
+      fragmentColor = vec4(0.0, 1.0, 1.0, opacity/10.);
+    }
+    else {
+      fragmentColor = vec4(0.0, 0.5, 1.0, opacity);
+    }   
   }
 
   // fragmentColor = vec4(1.0, 1.0, 0.0, 1.0); // all highly visible for DEBUG

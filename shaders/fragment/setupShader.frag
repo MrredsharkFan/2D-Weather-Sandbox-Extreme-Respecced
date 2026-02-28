@@ -66,14 +66,14 @@ void main()
     wall[DISTANCE] = 0;                                                                                       // set to wall
     if (height < texelSize.y) {
       wall[TYPE] = WALLTYPE_WATER;                                                                            // set walltype to water
-      base[TEMPERATURE] = CtoK(25.0);                                                                         // set water temperature to 25 C
+      base[TEMPERATURE] = CtoK(28.0);                                                                         // set water temperature to 25 C
     } else {
       wall[TYPE] = WALLTYPE_LAND;                                                                             // set walltype to land
-      water[SOIL_MOISTURE] = 25.0;                                                                            // soil moisture in mm
+      water[SOIL_MOISTURE] = max(map_rangeC(height_m, 0.0, 5000.0, 50.0, 0.0), 0.);                                                                            // soil moisture in mm
 
       wall[VEGETATION] = int(110.0 - fragCoord.y * 2. + noise(fragCoord.x * 0.01 + rand(seed) * 10.) * 150.); // set vegitation
 
-      water[SNOW] = max(map_rangeC(height_m, 2000.0, 5000.0, 0.0, 100.0), 0.);                                // set snow
+      water[SNOW] = max(map_rangeC(height_m, 3000.0, 10000.0, 0.0, 200.0), 0.);                                // set snow
     }
   } else {                                                                                                    // air, not wall
     wall[DISTANCE] = 255;                                                                                     // reset distance to wall
